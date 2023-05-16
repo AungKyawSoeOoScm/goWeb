@@ -7,15 +7,13 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	godotenv "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 var err error
-
-const DNS = "host=localhost user=postgres password=postakso786 dbname=myuser port=5432 sslmode=disable"
 
 type User struct {
 	gorm.Model
@@ -25,6 +23,13 @@ type User struct {
 }
 
 func InitialMigration() {
+	godotenv.Load(".env")
+	host := os.Getenv("HOST")
+	user := os.Getenv("USER")
+	password := os.Getenv("PASSWORD")
+	dbname := os.Getenv("DBNAME")
+	port := os.Getenv("PORT")
+	DNS := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", host, user, password, dbname, port)
 	DB, err = gorm.Open(postgres.Open(DNS), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
@@ -37,9 +42,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var users []User
 	err := DB.Find(&users).Error
-	fmt.Print(err)
-	godotenv.Load(".env")
-	fmt.Println(os.Getenv("NAME"))
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
